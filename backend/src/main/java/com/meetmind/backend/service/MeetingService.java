@@ -1,7 +1,10 @@
 package com.meetmind.backend.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.meetmind.backend.entity.Meeting;
 import com.meetmind.backend.repository.MeetingRepository;
+
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,6 +17,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.UUID;
 
+
 @Service
 public class MeetingService
 {
@@ -21,51 +25,98 @@ public class MeetingService
 
     private final AiServiceClient aiServiceClient;
 
-    private final Path uploadDirectory = Paths.get("uploads");
+    private final ObjectMapper objectMapper;
+
+    private final Path uploadDirectory =
+            Paths.get("uploads");
+
 
     public MeetingService(
             MeetingRepository meetingRepository,
-            AiServiceClient aiServiceClient)
+            AiServiceClient aiServiceClient,
+            ObjectMapper objectMapper)
     {
         this.meetingRepository = meetingRepository;
+
         this.aiServiceClient = aiServiceClient;
+
+        this.objectMapper = objectMapper;
     }
+
 
     public Meeting saveMeeting(Meeting meeting)
     {
         return meetingRepository.save(meeting);
     }
 
+
     public List<Meeting> getAllMeetings()
     {
         return meetingRepository.findAll();
     }
 
-    public Meeting updateMeeting(Long id, Meeting updatedMeeting)
+
+    public Meeting updateMeeting(
+            Long id,
+            Meeting updatedMeeting)
     {
-        Meeting existingMeeting = meetingRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Meeting not found"));
+        Meeting existingMeeting =
+                meetingRepository
+                        .findById(id)
+                        .orElseThrow(
+                                () -> new RuntimeException(
+                                        "Meeting not found"
+                                )
+                        );
 
-        existingMeeting.setTitle(updatedMeeting.getTitle());
-        existingMeeting.setTranscript(updatedMeeting.getTranscript());
-        existingMeeting.setSummary(updatedMeeting.getSummary());
-        existingMeeting.setKeyDecisions(updatedMeeting.getKeyDecisions());
-        existingMeeting.setActionItems(updatedMeeting.getActionItems());
 
-        return meetingRepository.save(existingMeeting);
+        existingMeeting.setTitle(
+                updatedMeeting.getTitle()
+        );
+
+        existingMeeting.setTranscript(
+                updatedMeeting.getTranscript()
+        );
+
+        existingMeeting.setSummary(
+                updatedMeeting.getSummary()
+        );
+
+        existingMeeting.setKeyDecisions(
+                updatedMeeting.getKeyDecisions()
+        );
+
+        existingMeeting.setActionItems(
+                updatedMeeting.getActionItems()
+        );
+
+
+        return meetingRepository.save(
+                existingMeeting
+        );
     }
+
 
     public void deleteMeeting(Long id)
     {
-        Meeting meeting = meetingRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Meeting not found"));
+        Meeting meeting =
+                meetingRepository
+                        .findById(id)
+                        .orElseThrow(
+                                () -> new RuntimeException(
+                                        "Meeting not found"
+                                )
+                        );
+
 
         if (meeting.getFileName() != null)
         {
             try
             {
                 Files.deleteIfExists(
-                        uploadDirectory.resolve(meeting.getFileName())
+                        uploadDirectory.resolve(
+                                meeting.getFileName()
+                        )
                 );
             }
             catch (IOException exception)
@@ -77,12 +128,158 @@ public class MeetingService
             }
         }
 
+
         meetingRepository.delete(meeting);
     }
 
+
     public Meeting uploadMeeting(
             String title,
-            MultipartFile file) throws IOException
+            MultipartFile file)
+            throws IOException
+    {
+        validateUploadedFile(file);
+
+
+        Files.createDirectories(
+                uploadDirectory
+        );
+
+
+        String originalFileName =
+                file.getOriginalFilename();
+
+
+        String extension =
+                getFileExtension(
+                        originalFileName
+                );
+
+
+        String storedFileName =
+                UUID.randomUUID()
+                        + extension;
+
+
+        Path destination =
+                uploadDirectory.resolve(
+                        storedFileName
+                );
+
+
+        Files.copy(
+                file.getInputStream(),
+                destination,
+                StandardCopyOption.REPLACE_EXISTING
+        );
+
+
+        Meeting meeting =
+                createMeetingRecord(
+                        title,
+                        file,
+                        originalFileName,
+                        storedFileName
+                );
+
+
+        meeting =
+                meetingRepository.save(
+                        meeting
+                );
+
+
+        try
+        {
+            File meetingFile =
+                    destination.toFile();
+
+
+            // ====================================================
+            // STEP 1: TRANSCRIPTION
+            // ====================================================
+
+            String transcript =
+                    aiServiceClient.transcribe(
+                            meetingFile
+                    );
+
+
+            meeting.setTranscript(
+                    transcript
+            );
+
+            meeting.setStatus(
+                    "TRANSCRIBED"
+            );
+
+
+            meeting =
+                    meetingRepository.save(
+                            meeting
+                    );
+
+
+            // ====================================================
+            // STEP 2: AI MEETING ANALYSIS
+            // ====================================================
+
+            MeetingAnalysis analysis =
+                    aiServiceClient.analyze(
+                            transcript
+                    );
+
+
+            meeting.setSummary(
+                    analysis.summary()
+            );
+
+
+            meeting.setKeyDecisions(
+                    serializeToJson(
+                            analysis.keyDecisions()
+                    )
+            );
+
+
+            meeting.setActionItems(
+                    serializeToJson(
+                            analysis.actionItems()
+                    )
+            );
+
+
+            meeting.setStatus(
+                    "COMPLETED"
+            );
+
+
+            return meetingRepository.save(
+                    meeting
+            );
+        }
+        catch (Exception exception)
+        {
+            meeting.setStatus(
+                    "AI_PROCESSING_FAILED"
+            );
+
+
+            meetingRepository.save(
+                    meeting
+            );
+
+
+            throw new RuntimeException(
+                    "AI processing failed",
+                    exception
+            );
+        }
+    }
+
+
+    private void validateUploadedFile(
+            MultipartFile file)
     {
         if (file.isEmpty())
         {
@@ -91,103 +288,93 @@ public class MeetingService
             );
         }
 
-        String contentType = file.getContentType();
 
-        if (contentType == null ||
-                (!contentType.startsWith("audio/") &&
-                 !contentType.startsWith("video/")))
+        String contentType =
+                file.getContentType();
+
+
+        if (contentType == null
+                || (!contentType.startsWith("audio/")
+                && !contentType.startsWith("video/")))
         {
             throw new IllegalArgumentException(
                     "Only audio and video files are supported"
             );
         }
+    }
 
-        Files.createDirectories(uploadDirectory);
 
-        String originalFileName = file.getOriginalFilename();
-
-        String extension = "";
-
-        if (originalFileName != null &&
-                originalFileName.contains("."))
+    private String getFileExtension(
+            String originalFileName)
+    {
+        if (originalFileName != null
+                && originalFileName.contains("."))
         {
-            extension = originalFileName.substring(
+            return originalFileName.substring(
                     originalFileName.lastIndexOf(".")
             );
         }
 
-        String storedFileName =
-                UUID.randomUUID() + extension;
 
-        Path destination =
-                uploadDirectory.resolve(storedFileName);
+        return "";
+    }
 
-        Files.copy(
-                file.getInputStream(),
-                destination,
-                StandardCopyOption.REPLACE_EXISTING
+
+    private Meeting createMeetingRecord(
+            String title,
+            MultipartFile file,
+            String originalFileName,
+            String storedFileName)
+    {
+        Meeting meeting =
+                new Meeting();
+
+
+        meeting.setTitle(
+                title
         );
 
-        Meeting meeting = new Meeting();
+        meeting.setFileName(
+                storedFileName
+        );
 
-        meeting.setTitle(title);
-        meeting.setFileName(storedFileName);
-        meeting.setOriginalFileName(originalFileName);
-        meeting.setFileType(contentType);
-        meeting.setFileSize(file.getSize());
+        meeting.setOriginalFileName(
+                originalFileName
+        );
 
-        // File uploaded successfully.
-        meeting.setStatus("UPLOADED");
+        meeting.setFileType(
+                file.getContentType()
+        );
 
-        // Save meeting first.
-        meeting = meetingRepository.save(meeting);
+        meeting.setFileSize(
+                file.getSize()
+        );
 
+        meeting.setStatus(
+                "UPLOADED"
+        );
+
+
+        return meeting;
+    }
+
+
+    private String serializeToJson(
+            Object value)
+    {
         try
         {
-            // Convert Path into File.
-            File audioFile = destination.toFile();
-
-            // Send file to Python AI service for transcription.
-            String transcript =
-                    aiServiceClient.transcribe(audioFile);
-
-            // Store transcript.
-            meeting.setTranscript(transcript);
-
-            // Update status.
-            meeting.setStatus("TRANSCRIBED");
-
-            // Save transcript into PostgreSQL.
-            meeting = meetingRepository.save(meeting);
-
-
-            // Generate the summary, decisions, and action items
-            // from the completed transcript.
-            MeetingAnalysis analysis =
-                    aiServiceClient.analyze(transcript);
-
-            meeting.setSummary(analysis.summary());
-            meeting.setKeyDecisions(analysis.keyDecisions());
-            meeting.setActionItems(analysis.actionItems());
-
-            // Update final status.
-            meeting.setStatus("COMPLETED");
-
-            // Save the complete meeting analysis into PostgreSQL.
-            meeting = meetingRepository.save(meeting);
+            return objectMapper
+                    .writeValueAsString(
+                            value
+                    );
         }
-        catch (Exception exception)
+        catch (JsonProcessingException exception)
         {
-            meeting.setStatus("AI_PROCESSING_FAILED");
-
-            meetingRepository.save(meeting);
-
             throw new RuntimeException(
-                    "AI processing failed",
+                    "Unable to serialize meeting analysis",
                     exception
             );
         }
-
-        return meeting;
     }
 }
