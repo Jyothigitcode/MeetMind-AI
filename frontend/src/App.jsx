@@ -6,6 +6,11 @@ import UploadMeeting from './components/UploadMeeting'
 import MeetingHistory from './components/MeetingHistory'
 import MeetingDetails from './components/MeetingDetails'
 
+import {
+    getAllMeetings,
+    uploadMeeting
+} from './services/meetingApi'
+
 
 function App()
 {
@@ -14,60 +19,82 @@ function App()
     const [selectedMeeting, setSelectedMeeting] =
         useState(null)
 
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] =
+        useState(false)
 
-    const [message, setMessage] = useState('')
+    const [message, setMessage] =
+        useState('')
 
-
-    const API_URL =
-        'http://localhost:8080/api/meetings'
+    const [messageType, setMessageType] =
+        useState('info')
 
 
     useEffect(() =>
     {
-        fetchMeetings()
+        loadMeetings()
     }, [])
 
 
-    const fetchMeetings = async () =>
+    const loadMeetings = async () =>
     {
         try
         {
-            const response =
-                await fetch(API_URL)
-
-
-            if (!response.ok)
-            {
-                throw new Error(
-                    'Unable to load meetings'
-                )
-            }
-
-
             const data =
-                await response.json()
+                await getAllMeetings()
 
 
-            setMeetings(data)
+            const sortedMeetings =
+                [...data].sort(
+                    (firstMeeting, secondMeeting) =>
+                        secondMeeting.id - firstMeeting.id
+                )
+
+
+            setMeetings(
+                sortedMeetings
+            )
+
+
+            setSelectedMeeting(
+                (currentMeeting) =>
+                {
+                    if (currentMeeting)
+                    {
+                        return currentMeeting
+                    }
+
+                    return sortedMeetings[0] || null
+                }
+            )
         }
         catch (error)
         {
             console.error(error)
 
             setMessage(
-                'Unable to connect to backend'
+                'Unable to connect to the MeetMind backend.'
+            )
+
+            setMessageType(
+                'error'
             )
         }
     }
 
 
-    const handleUpload = async (title, file) =>
+    const handleUpload = async (
+        title,
+        file
+    ) =>
     {
         if (!title.trim())
         {
             setMessage(
-                'Please enter a meeting title'
+                'Please enter a meeting title.'
+            )
+
+            setMessageType(
+                'error'
             )
 
             return false
@@ -77,7 +104,11 @@ function App()
         if (!file)
         {
             setMessage(
-                'Please select an audio or video file'
+                'Please select an audio or video file.'
+            )
+
+            setMessageType(
+                'error'
             )
 
             return false
@@ -89,46 +120,19 @@ function App()
             setLoading(true)
 
             setMessage(
-                'Processing your meeting...'
+                'Transcribing and analyzing your meeting. This may take a few minutes.'
             )
 
-
-            const formData =
-                new FormData()
-
-
-            formData.append(
-                'title',
-                title.trim()
+            setMessageType(
+                'processing'
             )
-
-
-            formData.append(
-                'file',
-                file
-            )
-
-
-            const response =
-                await fetch(
-                    `${API_URL}/upload`,
-                    {
-                        method: 'POST',
-                        body: formData
-                    }
-                )
-
-
-            if (!response.ok)
-            {
-                throw new Error(
-                    'Meeting processing failed'
-                )
-            }
 
 
             const processedMeeting =
-                await response.json()
+                await uploadMeeting(
+                    title.trim(),
+                    file
+                )
 
 
             setSelectedMeeting(
@@ -137,11 +141,15 @@ function App()
 
 
             setMessage(
-                'Meeting processed successfully'
+                'Meeting processed successfully. Your AI insights are ready.'
+            )
+
+            setMessageType(
+                'success'
             )
 
 
-            await fetchMeetings()
+            await loadMeetings()
 
 
             setTimeout(() =>
@@ -166,7 +174,12 @@ function App()
             console.error(error)
 
             setMessage(
-                'Unable to process meeting'
+                error.message ||
+                'Unable to process the meeting.'
+            )
+
+            setMessageType(
+                'error'
             )
 
 
@@ -179,9 +192,12 @@ function App()
     }
 
 
-    const handleSelectMeeting = (meeting) =>
+    const handleSelectMeeting =
+        (meeting) =>
     {
-        setSelectedMeeting(meeting)
+        setSelectedMeeting(
+            meeting
+        )
 
 
         setTimeout(() =>
@@ -228,10 +244,10 @@ function App()
 
 
                         <p>
-                            Upload your meeting recording
-                            and let MeetMind AI automatically
-                            generate an accurate transcript
-                            and intelligent summary.
+                            Upload your meeting recording and let
+                            MeetMind AI generate an accurate transcript,
+                            concise summary, key decisions, and
+                            actionable follow-up tasks.
                         </p>
 
 
@@ -246,7 +262,7 @@ function App()
                             </span>
 
                             <span>
-                                ✓ Meeting History
+                                ✓ Action Items
                             </span>
 
                         </div>
@@ -265,9 +281,22 @@ function App()
                 {
                     message &&
                     (
-                        <p className="message">
-                            {message}
-                        </p>
+                        <div
+                            className={
+                                `message message-${messageType}`
+                            }
+                        >
+                            {
+                                loading &&
+                                (
+                                    <span className="button-spinner"></span>
+                                )
+                            }
+
+                            <span>
+                                {message}
+                            </span>
+                        </div>
                     )
                 }
 
@@ -277,7 +306,9 @@ function App()
 
                     <MeetingHistory
                         meetings={meetings}
-                        selectedMeeting={selectedMeeting}
+                        selectedMeeting={
+                            selectedMeeting
+                        }
                         onSelectMeeting={
                             handleSelectMeeting
                         }
@@ -304,29 +335,45 @@ function App()
 
             <footer className="footer">
 
-                <div className="footer-content">
+    <div className="footer-content">
 
-                    <div>
+        <div>
 
-                        <strong>
-                            MeetMind AI
-                        </strong>
+            <strong>
+                MeetMind AI
+            </strong>
 
-                        <p>
-                            Intelligent meeting
-                            transcription and summarization.
-                        </p>
+            <p>
+                Intelligent meeting transcription,
+                summarization, decisions,
+                and action-item extraction.
+            </p>
 
-                    </div>
+        </div>
 
+       <div className="footer-credit">
 
-                    <span>
-                        Powered by AI
-                    </span>
+    <span>
+        Designed & Developed by
+    </span>
 
-                </div>
+    <strong>
+        Vivek Jogdand
+    </strong>
 
-            </footer>
+    <span className="footer-divider">
+        •
+    </span>
+
+    <span>
+        Faster-Whisper • Qwen3 • Spring Boot • React
+    </span>
+
+</div>
+
+    </div>
+
+</footer>
 
         </div>
     )
