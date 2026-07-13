@@ -280,6 +280,7 @@ button {
         0 10px 40px
         rgba(15, 23, 42, 0.055);
 }
+    
 
 
 /* =========================
@@ -666,6 +667,30 @@ button {
     flex-direction: column;
 
     gap: 10px;
+
+    margin-top: 20px;
+
+    max-height: 760px;
+
+    overflow-y: auto;
+
+    padding-right: 6px;
+}
+.meeting-list::-webkit-scrollbar {
+    width: 7px;
+}
+
+.meeting-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.meeting-list::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 999px;
+}
+
+.meeting-list::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }
 
 .meeting-list-item {
