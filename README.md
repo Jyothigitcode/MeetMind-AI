@@ -187,27 +187,7 @@ Upload an audio or video meeting and MeetMind AI will automatically:
 - 🔥 Detect priorities
 
 ---
-## 🚀 Future Improvements
 
-The following enhancements are planned for future versions of MeetMind AI:
-
-- 🔍 Search meetings by title or keyword
-- 🗑 Delete meetings from history
-- 📄 Export meeting summary as PDF
-- 📑 Export transcript as DOCX
-- 📊 Meeting analytics dashboard
-- 👥 Speaker identification
-- 🔐 User authentication and authorization
-- ☁ Cloud deployment (AWS/Azure/GCP)
-- 📱 Responsive mobile-first interface
-- 🌍 Multi-language transcription and translation
-- 🔔 Email notifications for action items
-- 📅 Calendar integration (Google Calendar / Outlook)
-- 📈 Team productivity insights
-- 🤖 Support for additional AI models
-- ⚡ Real-time meeting transcription
-
----
 ## 👨‍💻 Developed By
 
 **Vivek Jogdand**
@@ -224,5 +204,3 @@ Computer Engineering Student
 - REST API
 
 ---
-
-⭐ If you found this project interesting, consider giving it a star on GitHub.
