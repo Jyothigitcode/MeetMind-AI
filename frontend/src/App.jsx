@@ -358,7 +358,7 @@ function App()
     </span>
 
     <strong>
-        Vivek Jogdand
+        Jyothisri
     </strong>
 
     <span className="footer-divider">

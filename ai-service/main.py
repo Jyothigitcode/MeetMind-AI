@@ -49,7 +49,7 @@ def health():
         "service": "MeetMind AI Service",
         "version": "2.0.0",
         "transcriptionModel": "faster-whisper-base",
-        "analysisModel": "qwen3:8b",
+        "analysisModel": "qwen3:4b",
     }
 
 
