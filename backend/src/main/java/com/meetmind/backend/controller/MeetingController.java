@@ -33,6 +33,12 @@ public class MeetingController
         return meetingService.saveMeeting(meeting);
     }
 
+    @GetMapping("/{id}")
+    public Meeting getMeeting(@PathVariable Long id)
+    {
+        return meetingService.getMeeting(id);
+    }
+
     @GetMapping
     public List<Meeting> getAllMeetings()
     {
