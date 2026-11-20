@@ -14,6 +14,14 @@ export async function getAllMeetings()
 }
 
 
+export async function getMeetingStatus(id)
+{
+    const response = await fetch(`${API_BASE_URL}/${id}`)
+    if (!response.ok) throw new Error('Unable to retrieve processing status')
+    return response.json()
+}
+
+
 export async function uploadMeeting(title, file)
 {
     const formData = new FormData()
