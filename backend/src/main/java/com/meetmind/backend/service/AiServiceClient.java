@@ -46,6 +46,11 @@ public class AiServiceClient
 
     public String transcribe(File audioFile)
     {
+        return transcribeDetailed(audioFile).path("transcript").asText();
+    }
+
+    public JsonNode transcribeDetailed(File audioFile)
+    {
         try
         {
             FileSystemResource fileResource =
@@ -124,7 +129,7 @@ public class AiServiceClient
             }
 
 
-            return transcript.asText();
+            return responseJson;
         }
         catch (Exception exception)
         {
