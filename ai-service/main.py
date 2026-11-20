@@ -1,5 +1,6 @@
 import shutil
 import tempfile
+import time
 from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
@@ -63,6 +64,7 @@ def transcribe(
 ):
 
     temp_path: str | None = None
+    started_at = time.perf_counter()
 
     try:
 
@@ -92,6 +94,7 @@ def transcribe(
 
 
         transcript_parts: list[str] = []
+        timestamped_segments: list[dict[str, object]] = []
 
 
         for segment in segments:
@@ -101,6 +104,11 @@ def transcribe(
             if text:
 
                 transcript_parts.append(text)
+                timestamped_segments.append({
+                    "start": round(float(segment.start), 3),
+                    "end": round(float(segment.end), 3),
+                    "text": text,
+                })
 
 
         transcript = " ".join(
@@ -125,6 +133,8 @@ def transcribe(
             "languageProbability":
                 info.language_probability,
             "duration": info.duration,
+            "segments": timestamped_segments,
+            "transcriptionSeconds": round(time.perf_counter() - started_at, 3),
         }
 
 
