@@ -37,6 +37,13 @@ public class Meeting
 
     private String status;
 
+    private String processingStage;
+
+    private Integer progressPercent;
+
+    @Column(columnDefinition = "TEXT")
+    private String processingError;
+
 
     public Meeting()
     {
@@ -152,6 +159,18 @@ public class Meeting
         this.fileSize = fileSize;
     }
 
+
+    public String getProcessingStage() { return processingStage; }
+
+    public void setProcessingStage(String processingStage) { this.processingStage = processingStage; }
+
+    public Integer getProgressPercent() { return progressPercent; }
+
+    public void setProgressPercent(Integer progressPercent) { this.progressPercent = progressPercent; }
+
+    public String getProcessingError() { return processingError; }
+
+    public void setProcessingError(String processingError) { this.processingError = processingError; }
 
     public String getStatus()
     {
