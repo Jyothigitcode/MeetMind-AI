@@ -1923,3 +1923,119 @@ button {
     }
 
 }
+
+/* Live processing pipeline */
+.pipeline-progress {
+    margin: 18px 0 24px;
+    padding: 20px 22px;
+    border: 1px solid #dbeafe;
+    border-radius: 14px;
+    background: #ffffff;
+}
+.pipeline-progress-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    color: #334155;
+    font-size: 13px;
+}
+.pipeline-progress-heading span {
+    color: #4f46e5;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+.pipeline-progress-track {
+    height: 8px;
+    margin-top: 13px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #e2e8f0;
+}
+.pipeline-progress-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #4f46e5, #8b5cf6);
+    transition: width 0.35s ease;
+}
+.pipeline-progress > p {
+    margin-top: 9px;
+    color: #64748b;
+    font-size: 11px;
+    text-transform: capitalize;
+}
+.pipeline-stage-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 14px;
+}
+.pipeline-stage {
+    padding: 6px 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 7px;
+    color: #94a3b8;
+    font-size: 9px;
+    font-weight: 700;
+}
+.pipeline-stage.done {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+    color: #15803d;
+}
+
+
+/* Processing metrics and timestamped transcript */
+.processing-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin: 0 0 17px;
+}
+.processing-metrics > div {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 13px 15px;
+    border: 1px solid #e7ebf0;
+    border-radius: 11px;
+    background: #ffffff;
+}
+.processing-metrics span {
+    color: #94a3b8;
+    font-size: 10px;
+}
+.processing-metrics strong {
+    color: #334155;
+    font-size: 13px;
+    text-transform: capitalize;
+}
+.timestamped-transcript {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+}
+.transcript-segment {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+}
+.transcript-time {
+    padding: 4px 5px;
+    border-radius: 6px;
+    background: #eef2ff;
+    color: #4f46e5;
+    font-size: 10px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+.transcript-segment p {
+    color: #475569;
+    font-size: 13px;
+    line-height: 1.75;
+    white-space: pre-wrap;
+}
+@media (max-width: 700px) {
+    .processing-metrics { grid-template-columns: 1fr; }
+}

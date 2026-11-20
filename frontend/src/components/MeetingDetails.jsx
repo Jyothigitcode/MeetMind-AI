@@ -79,6 +79,12 @@ function MeetingDetails({ meeting })
 
     const decisions = parseArray(meeting.keyDecisions)
     const actionItems = parseArray(meeting.actionItems)
+    const transcriptSegments = parseArray(meeting.transcriptSegments)
+
+    const formatTimestamp = (seconds) => {
+        const value = Math.max(0, Math.floor(Number(seconds) || 0))
+        return String(Math.floor(value / 60)).padStart(2, "0") + ":" + String(value % 60).padStart(2, "0")
+    }
 
 
     return (
@@ -114,6 +120,12 @@ function MeetingDetails({ meeting })
 
             </div>
 
+
+            <div className="processing-metrics">
+                <div><span>Transcription</span><strong>{meeting.transcriptionSeconds != null ? Number(meeting.transcriptionSeconds).toFixed(1) + "s" : "Not recorded"}</strong></div>
+                <div><span>AI analysis</span><strong>{meeting.analysisSeconds != null ? Number(meeting.analysisSeconds).toFixed(1) + "s" : "Not recorded"}</strong></div>
+                <div><span>Pipeline stage</span><strong>{(meeting.processingStage || meeting.status || "Unknown").replaceAll("_", " ")}</strong></div>
+            </div>
 
             <div className="insight-grid">
 
@@ -332,9 +344,18 @@ function MeetingDetails({ meeting })
                             meeting.transcript
                                 ?
                                 (
-                                    <p className="transcript-text">
-                                        {meeting.transcript}
-                                    </p>
+                                    transcriptSegments.length > 0
+                                        ? (
+                                            <div className="timestamped-transcript">
+                                                {transcriptSegments.map((segment, index) => (
+                                                    <div className="transcript-segment" key={String(segment.start) + "-" + index}>
+                                                        <span className="transcript-time">{formatTimestamp(segment.start)}</span>
+                                                        <p>{segment.text}</p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )
+                                        : <p className="transcript-text">{meeting.transcript}</p>
                                 )
                                 :
                                 (

@@ -19,6 +19,13 @@ public class Meeting
     private String transcript;
 
     @Column(columnDefinition = "TEXT")
+    private String transcriptSegments;
+
+    private Double transcriptionSeconds;
+
+    private Double analysisSeconds;
+
+    @Column(columnDefinition = "TEXT")
     private String summary;
 
     @Column(columnDefinition = "TEXT")
@@ -36,6 +43,13 @@ public class Meeting
     private Long fileSize;
 
     private String status;
+
+    private String processingStage;
+
+    private Integer progressPercent;
+
+    @Column(columnDefinition = "TEXT")
+    private String processingError;
 
 
     public Meeting()
@@ -75,6 +89,18 @@ public class Meeting
         this.transcript = transcript;
     }
 
+
+    public String getTranscriptSegments() { return transcriptSegments; }
+
+    public void setTranscriptSegments(String transcriptSegments) { this.transcriptSegments = transcriptSegments; }
+
+    public Double getTranscriptionSeconds() { return transcriptionSeconds; }
+
+    public void setTranscriptionSeconds(Double transcriptionSeconds) { this.transcriptionSeconds = transcriptionSeconds; }
+
+    public Double getAnalysisSeconds() { return analysisSeconds; }
+
+    public void setAnalysisSeconds(Double analysisSeconds) { this.analysisSeconds = analysisSeconds; }
 
     public String getSummary()
     {
@@ -152,6 +178,18 @@ public class Meeting
         this.fileSize = fileSize;
     }
 
+
+    public String getProcessingStage() { return processingStage; }
+
+    public void setProcessingStage(String processingStage) { this.processingStage = processingStage; }
+
+    public Integer getProgressPercent() { return progressPercent; }
+
+    public void setProgressPercent(Integer progressPercent) { this.progressPercent = progressPercent; }
+
+    public String getProcessingError() { return processingError; }
+
+    public void setProcessingError(String processingError) { this.processingError = processingError; }
 
     public String getStatus()
     {
