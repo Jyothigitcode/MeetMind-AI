@@ -1983,3 +1983,59 @@ button {
     background: #f0fdf4;
     color: #15803d;
 }
+
+
+/* Processing metrics and timestamped transcript */
+.processing-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin: 0 0 17px;
+}
+.processing-metrics > div {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 13px 15px;
+    border: 1px solid #e7ebf0;
+    border-radius: 11px;
+    background: #ffffff;
+}
+.processing-metrics span {
+    color: #94a3b8;
+    font-size: 10px;
+}
+.processing-metrics strong {
+    color: #334155;
+    font-size: 13px;
+    text-transform: capitalize;
+}
+.timestamped-transcript {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+}
+.transcript-segment {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+}
+.transcript-time {
+    padding: 4px 5px;
+    border-radius: 6px;
+    background: #eef2ff;
+    color: #4f46e5;
+    font-size: 10px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+.transcript-segment p {
+    color: #475569;
+    font-size: 13px;
+    line-height: 1.75;
+    white-space: pre-wrap;
+}
+@media (max-width: 700px) {
+    .processing-metrics { grid-template-columns: 1fr; }
+}
