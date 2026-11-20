@@ -38,6 +38,11 @@ public class MeetingService {
                 return meetingRepository.findAll();
         }
 
+        public Meeting getMeeting(Long id) {
+                return meetingRepository.findById(id)
+                        .orElseThrow(() -> new RuntimeException("Meeting not found"));
+        }
+
         public Meeting updateMeeting(
                         Long id,
                         Meeting updatedMeeting) {
