@@ -1,7 +1,5 @@
 package com.meetmind.backend.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.meetmind.backend.entity.Meeting;
 import com.meetmind.backend.repository.MeetingRepository;
 
@@ -21,21 +19,15 @@ import java.util.UUID;
 public class MeetingService {
         private final MeetingRepository meetingRepository;
 
-        private final AiServiceClient aiServiceClient;
-
-        private final ObjectMapper objectMapper;
+        private final MeetingProcessingService meetingProcessingService;
 
         private final Path uploadDirectory = Paths.get("uploads");
 
         public MeetingService(
                         MeetingRepository meetingRepository,
-                        AiServiceClient aiServiceClient,
-                        ObjectMapper objectMapper) {
+                        MeetingProcessingService meetingProcessingService) {
                 this.meetingRepository = meetingRepository;
-
-                this.aiServiceClient = aiServiceClient;
-
-                this.objectMapper = objectMapper;
+                this.meetingProcessingService = meetingProcessingService;
         }
 
         public Meeting saveMeeting(Meeting meeting) {
@@ -130,59 +122,16 @@ public class MeetingService {
                 meeting = meetingRepository.save(
                                 meeting);
 
-                try {
-                        File meetingFile = destination.toFile();
+                meeting.setStatus("PROCESSING");
+                meeting.setProcessingStage("QUEUED");
+                meeting.setProgressPercent(5);
+                meeting = meetingRepository.save(meeting);
 
-                        // ====================================================
-                        // STEP 1: TRANSCRIPTION
-                        // ====================================================
+                meetingProcessingService.processMeeting(
+                                meeting.getId(),
+                                storedFileName);
 
-                        String transcript = aiServiceClient.transcribe(
-                                        meetingFile);
-
-                        meeting.setTranscript(
-                                        transcript);
-
-                        meeting.setStatus(
-                                        "TRANSCRIBED");
-
-                        meeting = meetingRepository.save(
-                                        meeting);
-
-                        // ====================================================
-                        // STEP 2: AI MEETING ANALYSIS
-                        // ====================================================
-
-                        MeetingAnalysis analysis = aiServiceClient.analyze(
-                                        transcript);
-
-                        meeting.setSummary(
-                                        analysis.summary());
-
-                        meeting.setKeyDecisions(
-                                        serializeToJson(
-                                                        analysis.keyDecisions()));
-
-                        meeting.setActionItems(
-                                        serializeToJson(
-                                                        analysis.actionItems()));
-
-                        meeting.setStatus(
-                                        "COMPLETED");
-
-                        return meetingRepository.save(
-                                        meeting);
-                } catch (Exception exception) {
-                        meeting.setStatus(
-                                        "AI_PROCESSING_FAILED");
-
-                        meetingRepository.save(
-                                        meeting);
-
-                        throw new RuntimeException(
-                                        "AI processing failed",
-                                        exception);
-                }
+                return meeting;
         }
 
         private void validateUploadedFile(MultipartFile file) {
@@ -242,16 +191,4 @@ public class MeetingService {
                 return meeting;
         }
 
-        private String serializeToJson(
-                        Object value) {
-                try {
-                        return objectMapper
-                                        .writeValueAsString(
-                                                        value);
-                } catch (JsonProcessingException exception) {
-                        throw new RuntimeException(
-                                        "Unable to serialize meeting analysis",
-                                        exception);
-                }
-        }
 }
