@@ -19,6 +19,13 @@ public class Meeting
     private String transcript;
 
     @Column(columnDefinition = "TEXT")
+    private String transcriptSegments;
+
+    private Double transcriptionSeconds;
+
+    private Double analysisSeconds;
+
+    @Column(columnDefinition = "TEXT")
     private String summary;
 
     @Column(columnDefinition = "TEXT")
@@ -82,6 +89,18 @@ public class Meeting
         this.transcript = transcript;
     }
 
+
+    public String getTranscriptSegments() { return transcriptSegments; }
+
+    public void setTranscriptSegments(String transcriptSegments) { this.transcriptSegments = transcriptSegments; }
+
+    public Double getTranscriptionSeconds() { return transcriptionSeconds; }
+
+    public void setTranscriptionSeconds(Double transcriptionSeconds) { this.transcriptionSeconds = transcriptionSeconds; }
+
+    public Double getAnalysisSeconds() { return analysisSeconds; }
+
+    public void setAnalysisSeconds(Double analysisSeconds) { this.analysisSeconds = analysisSeconds; }
 
     public String getSummary()
     {
