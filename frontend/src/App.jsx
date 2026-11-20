@@ -8,7 +8,8 @@ import MeetingDetails from './components/MeetingDetails'
 
 import {
     getAllMeetings,
-    uploadMeeting
+    uploadMeeting,
+    getMeetingStatus
 } from './services/meetingApi'
 
 
@@ -21,6 +22,8 @@ function App()
 
     const [loading, setLoading] =
         useState(false)
+
+    const [processingMeeting, setProcessingMeeting] = useState(null)
 
     const [message, setMessage] =
         useState('')
@@ -82,115 +85,64 @@ function App()
     }
 
 
-    const handleUpload = async (
-        title,
-        file
-    ) =>
+    const handleUpload = async (title, file) =>
     {
-        if (!title.trim())
-        {
-            setMessage(
-                'Please enter a meeting title.'
-            )
-
-            setMessageType(
-                'error'
-            )
-
+        if (!title.trim() || !file) {
+            setMessage(!title.trim() ? 'Please enter a meeting title.' : 'Please select an audio or video file.')
+            setMessageType('error')
             return false
         }
 
-
-        if (!file)
-        {
-            setMessage(
-                'Please select an audio or video file.'
-            )
-
-            setMessageType(
-                'error'
-            )
-
-            return false
-        }
-
-
-        try
-        {
+        try {
             setLoading(true)
+            setMessage('Uploading your meeting recording...')
+            setMessageType('processing')
 
-            setMessage(
-                'Transcribing and analyzing your meeting. This may take a few minutes.'
-            )
+            let current = await uploadMeeting(title.trim(), file)
+            setProcessingMeeting(current)
+            setSelectedMeeting(current)
+            setMessage('Upload complete. Processing has started.')
 
-            setMessageType(
-                'processing'
-            )
+            const terminalStatuses = ['COMPLETED', 'AI_PROCESSING_FAILED', 'FAILED']
+            while (!terminalStatuses.includes((current.status || '').toUpperCase())) {
+                await new Promise(resolve => setTimeout(resolve, 1500))
+                current = await getMeetingStatus(current.id)
+                setProcessingMeeting(current)
+                setSelectedMeeting(current)
+                setMeetings(previous => {
+                    const withoutCurrent = previous.filter(item => item.id !== current.id)
+                    return [current, ...withoutCurrent]
+                })
+                const stage = (current.processingStage || current.status || 'PROCESSING').replaceAll('_', ' ').toLowerCase()
+                setMessage(`MeetMind is processing: ${stage} (${current.progressPercent ?? 0}%)`)
+            }
 
-
-            const processedMeeting =
-                await uploadMeeting(
-                    title.trim(),
-                    file
-                )
-
-
-            setSelectedMeeting(
-                processedMeeting
-            )
-
-
-            setMessage(
-                'Meeting processed successfully. Your AI insights are ready.'
-            )
-
-            setMessageType(
-                'success'
-            )
-
-
+            setProcessingMeeting(current)
+            setSelectedMeeting(current)
             await loadMeetings()
+            setSelectedMeeting(current)
 
+            if (current.status === 'COMPLETED') {
+                setMessage('Meeting processed successfully. Your AI insights are ready.')
+                setMessageType('success')
+            } else {
+                setMessage(current.processingError || 'Meeting processing failed. Check that the AI service is running.')
+                setMessageType('error')
+            }
 
-            setTimeout(() =>
-            {
-                document
-                    .getElementById(
-                        'meeting-details'
-                    )
-                    ?.scrollIntoView(
-                        {
-                            behavior: 'smooth',
-                            block: 'start'
-                        }
-                    )
+            setTimeout(() => {
+                document.getElementById('meeting-details')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
             }, 100)
-
-
-            return true
-        }
-        catch (error)
-        {
+            return current.status === 'COMPLETED'
+        } catch (error) {
             console.error(error)
-
-            setMessage(
-                error.message ||
-                'Unable to process the meeting.'
-            )
-
-            setMessageType(
-                'error'
-            )
-
-
+            setMessage(error.message || 'Unable to process the meeting.')
+            setMessageType('error')
             return false
-        }
-        finally
-        {
+        } finally {
             setLoading(false)
         }
     }
-
 
     const handleSelectMeeting =
         (meeting) =>
@@ -297,6 +249,30 @@ function App()
                                 {message}
                             </span>
                         </div>
+                    )
+                }
+
+                {
+                    processingMeeting && loading &&
+                    (
+                        <section className="pipeline-progress" aria-live="polite">
+                            <div className="pipeline-progress-heading">
+                                <strong>Meeting processing pipeline</strong>
+                                <span>{processingMeeting.progressPercent ?? 0}%</span>
+                            </div>
+                            <div className="pipeline-progress-track">
+                                <div className="pipeline-progress-fill" style={{ width: `${processingMeeting.progressPercent ?? 0}%` }} />
+                            </div>
+                            <p>{(processingMeeting.processingStage || processingMeeting.status || 'QUEUED').replaceAll('_', ' ')}</p>
+                            <div className="pipeline-stage-list">
+                                {['QUEUED', 'TRANSCRIPTION', 'AI_ANALYSIS', 'SAVING_RESULTS', 'COMPLETED'].map((stage, index) => {
+                                    const order = ['QUEUED', 'TRANSCRIPTION', 'AI_ANALYSIS', 'SAVING_RESULTS', 'COMPLETED']
+                                    const currentIndex = order.indexOf(processingMeeting.processingStage)
+                                    const done = currentIndex >= index || processingMeeting.status === 'COMPLETED'
+                                    return <span key={stage} className={done ? 'pipeline-stage done' : 'pipeline-stage'}>{stage.replaceAll('_', ' ')}</span>
+                                })}
+                            </div>
+                        </section>
                     )
                 }
 
