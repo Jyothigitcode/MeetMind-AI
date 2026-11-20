@@ -344,7 +344,7 @@ function MeetingDetails({ meeting })
                             meeting.transcript
                                 ?
                                 (
-                                    {transcriptSegments.length > 0
+                                    transcriptSegments.length > 0
                                         ? (
                                             <div className="timestamped-transcript">
                                                 {transcriptSegments.map((segment, index) => (
@@ -355,7 +355,7 @@ function MeetingDetails({ meeting })
                                                 ))}
                                             </div>
                                         )
-                                        : <p className="transcript-text">{meeting.transcript}</p>}
+                                        : <p className="transcript-text">{meeting.transcript}</p>
                                 )
                                 :
                                 (
