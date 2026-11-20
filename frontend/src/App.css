@@ -1923,3 +1923,63 @@ button {
     }
 
 }
+
+/* Live processing pipeline */
+.pipeline-progress {
+    margin: 18px 0 24px;
+    padding: 20px 22px;
+    border: 1px solid #dbeafe;
+    border-radius: 14px;
+    background: #ffffff;
+}
+.pipeline-progress-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    color: #334155;
+    font-size: 13px;
+}
+.pipeline-progress-heading span {
+    color: #4f46e5;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+.pipeline-progress-track {
+    height: 8px;
+    margin-top: 13px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #e2e8f0;
+}
+.pipeline-progress-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #4f46e5, #8b5cf6);
+    transition: width 0.35s ease;
+}
+.pipeline-progress > p {
+    margin-top: 9px;
+    color: #64748b;
+    font-size: 11px;
+    text-transform: capitalize;
+}
+.pipeline-stage-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 14px;
+}
+.pipeline-stage {
+    padding: 6px 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 7px;
+    color: #94a3b8;
+    font-size: 9px;
+    font-weight: 700;
+}
+.pipeline-stage.done {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+    color: #15803d;
+}
