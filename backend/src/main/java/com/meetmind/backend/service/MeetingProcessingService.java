@@ -37,19 +37,26 @@ public class MeetingProcessingService {
             meeting.setProcessingError(null);
             meetingRepository.save(meeting);
 
-            String transcript = aiServiceClient.transcribe(
+            long transcriptionStarted = System.nanoTime();
+            var transcription = aiServiceClient.transcribeDetailed(
                     uploadDirectory.resolve(storedFileName).toFile());
+            double transcriptionSeconds = (System.nanoTime() - transcriptionStarted) / 1_000_000_000.0;
+            String transcript = transcription.path("transcript").asText();
             if (transcript == null || transcript.isBlank()) {
                 throw new IllegalStateException("Transcription returned empty text.");
             }
 
             meeting.setTranscript(transcript);
+            meeting.setTranscriptSegments(objectMapper.writeValueAsString(transcription.path("segments")));
+            meeting.setTranscriptionSeconds(transcription.path("transcriptionSeconds").asDouble(transcriptionSeconds));
             meeting.setStatus("PROCESSING");
             meeting.setProcessingStage("AI_ANALYSIS");
             meeting.setProgressPercent(60);
             meetingRepository.save(meeting);
 
+            long analysisStarted = System.nanoTime();
             MeetingAnalysis analysis = aiServiceClient.analyze(transcript);
+            meeting.setAnalysisSeconds((System.nanoTime() - analysisStarted) / 1_000_000_000.0);
             meeting.setSummary(analysis.summary());
             meeting.setKeyDecisions(objectMapper.writeValueAsString(analysis.keyDecisions()));
             meeting.setActionItems(objectMapper.writeValueAsString(analysis.actionItems()));
